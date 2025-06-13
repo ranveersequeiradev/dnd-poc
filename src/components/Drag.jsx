@@ -25,7 +25,11 @@ import { Separator } from "@/components/ui/separator";
 const Button = React.forwardRef(({ children, variant, ...props }, ref) => (
   <button
     ref={ref}
-    className={`px-4 py-2 rounded-lg font-semibold text-white ${variant === "destructive" ? "bg-red-500 hover:bg-red-600" : "bg-slate-900 hover:bg-slate-700"} focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-opacity-50 transition-colors`}
+    className={`px-4 py-2 rounded-lg font-semibold text-white ${
+      variant === "destructive"
+        ? "bg-red-500 hover:bg-red-600"
+        : "bg-slate-900 hover:bg-slate-700"
+    } focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-opacity-50 transition-colors`}
     {...props}
   >
     {children}
@@ -61,6 +65,50 @@ const Textarea = React.forwardRef((props, ref) => (
   />
 ));
 Textarea.displayName = "Textarea";
+
+const Text = React.forwardRef(({ text, ...props }, ref) => (
+  <p ref={ref} className="text-base text-slate-800" style={{ ...props.style }}>
+    {text}
+  </p>
+));
+Text.displayName = "Text";
+
+const Description = React.forwardRef(({ text, ...props }, ref) => (
+  <p ref={ref} className="text-sm text-slate-600" style={{ ...props.style }}>
+    {text}
+  </p>
+));
+Description.displayName = "Description";
+
+const Graph = React.forwardRef(({ chartType, ...props }, ref) => (
+  <div ref={ref} className="w-full h-64 bg-slate-50 p-4 rounded-lg">
+    <p className="text-center font-medium text-slate-700 mb-2">
+      {chartType === "bar" ? "Bar Chart" : "Line Chart"}
+    </p>
+    <svg
+      className="w-full h-full"
+      viewBox="0 0 100 50"
+      preserveAspectRatio="none"
+    >
+      {chartType === "bar" ? (
+        <>
+          <rect x="10" y="20" width="15" height="30" fill="#a7f3d0" />
+          <rect x="35" y="10" width="15" height="40" fill="#6ee7b7" />
+          <rect x="60" y="25" width="15" height="25" fill="#34d399" />
+          <rect x="85" y="5" width="15" height="45" fill="#10b981" />
+        </>
+      ) : (
+        <polyline
+          fill="none"
+          stroke="#3b82f6"
+          strokeWidth="2"
+          points="5,45 25,20 45,35 65,10 85,25 95,5"
+        />
+      )}
+    </svg>
+  </div>
+));
+Graph.displayName = "Graph";
 
 const EditableCell = ({ value, onSave, isHeader = false }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -165,7 +213,7 @@ const Table = React.forwardRef(
 Table.displayName = "Table";
 
 // --- COMPONENT INFRASTRUCTURE ---
-const COMPONENT_MAP = { Image, Table };
+const COMPONENT_MAP = { Text, Description, Image, Table };
 
 const generateDefaultTableData = (rows, cols, hasHeader) => {
   const actualRows = hasHeader ? rows - 1 : rows;
@@ -227,6 +275,32 @@ const DEFAULT_PROPS = {
     cols: 4,
     hasHeader: true,
     data: generateDefaultTableData(4, 4, true),
+    styles: { marginTop: 10, marginBottom: 4, marginLeft: 0, marginRight: 0 },
+  },
+  Text: {
+    text: "This is an editable text block. Click to select and edit in the properties panel.",
+    styles: {
+      marginTop: 8,
+      marginBottom: 8,
+      marginLeft: 0,
+      marginRight: 0,
+      fontSize: 18,
+      color: "#1e293b",
+    },
+  },
+  Description: {
+    text: "This is a smaller description text. Use it for details, captions, or supplementary information.",
+    styles: {
+      marginTop: 4,
+      marginBottom: 4,
+      marginLeft: 0,
+      marginRight: 0,
+      fontSize: 14,
+      color: "#475569",
+    },
+  },
+  Graph: {
+    chartType: "bar",
     styles: { marginTop: 10, marginBottom: 4, marginLeft: 0, marginRight: 0 },
   },
 };
@@ -306,6 +380,10 @@ const SortableCanvasItem = ({
   const renderComponent = () => {
     const Component = COMPONENT_MAP[component.type];
     if (!Component) return <div>Unknown Component</div>;
+    const componentProps = {
+      ...props,
+      style: { color: styles.color, fontSize: `${styles.fontSize}px` },
+    };
     switch (component.type) {
       case "Table":
         return (
@@ -337,6 +415,12 @@ const SortableCanvasItem = ({
         return <Separator />;
       case "Image":
         return <Image src={props.src} alt={props.alt} />;
+      case "Text":
+        return <Text text={props.text} style={componentProps.style} />;
+      case "Description":
+        return <Description text={props.text} style={componentProps.style} />;
+      case "Graph":
+        return <Graph chartType={props.chartType} />;
       default:
         return <Component {...props} />;
     }
@@ -443,6 +527,54 @@ const PropertiesPanel = ({ selectedComponent, onUpdate, onDeselect }) => {
   };
   const renderFields = () => {
     switch (type) {
+      case "Text":
+        return (
+          <div className="space-y-2">
+            <label htmlFor="text" className="font-medium text-sm">
+              Content
+            </label>
+            <Textarea
+              name="text"
+              id="text"
+              value={props.text}
+              onChange={handlePropChange}
+              rows={4}
+            />
+          </div>
+        );
+      case "Description":
+        return (
+          <div className="space-y-2">
+            <label htmlFor="text" className="font-medium text-sm">
+              Content
+            </label>
+            <Textarea
+              name="text"
+              id="text"
+              value={props.text}
+              onChange={handlePropChange}
+              rows={5}
+            />
+          </div>
+        );
+      case "Graph":
+        return (
+          <div className="space-y-2">
+            <label htmlFor="chartType" className="font-medium text-sm">
+              Chart Type
+            </label>
+            <select
+              name="chartType"
+              id="chartType"
+              value={props.chartType}
+              onChange={handlePropChange}
+              className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-500"
+            >
+              <option value="bar">Bar Chart</option>
+              <option value="line">Line Chart</option>
+            </select>
+          </div>
+        );
       case "Table":
         return (
           <>
@@ -687,7 +819,9 @@ const ExportModal = ({ isOpen, onClose, components }) => {
         return `        <${c.type} ${propsString} ${styleString} />`;
       })
       .join("\n");
-    const imports = `import { ${[...new Set(components.map((c) => c.type))].join(", ")} } from '@/components/ui';`;
+    const imports = `import { ${[
+      ...new Set(components.map((c) => c.type)),
+    ].join(", ")} } from '@/components/ui';`;
     return `import React from 'react';\n${imports}\n\nexport default function GeneratedPage() {\n  return (\n    <div className="p-8 space-y-4">\n${componentJSX}\n    </div>\n  );\n}`;
   };
   const pageJson = JSON.stringify(
