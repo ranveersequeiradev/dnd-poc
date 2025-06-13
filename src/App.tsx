@@ -4,7 +4,7 @@ import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
 import DashboardPage from "./pages/DashboardPage";
 import PrivateRoute from "./components/PrivateRoute";
-import DragAdvanced from "./components/DragAdvanced";
+import DragAdvanced from "./components/Drag";
 
 function App() {
   return (
